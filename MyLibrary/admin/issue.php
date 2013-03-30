@@ -1,0 +1,631 @@
+<html>
+<head>
+
+<title>My Library</title>
+<link href="../default.css" rel="stylesheet" type="text/css" />
+<link rel="shortcut icon" href="../img/User-icon.png" />
+</head>
+
+<body>
+
+<script>
+
+function ren_val()
+{
+	var title=document.renw.title.value;
+
+	if(!title.length)
+	{
+		alert('Invalid Request');
+		document.renw.title.focus();
+		return false;
+	}
+
+	return true;
+
+}
+
+
+function iss_val()
+{
+	var book=document.issue.book.value;
+	var mem=document.issue.mem.value;
+
+	if (!book.length)
+	{
+		alert('Incomplete form');
+		document.issue.book.focus();
+		return false;
+	}
+
+	if (!mem.length)
+	{
+		alert('Incomplete form');
+		document.issue.mem.focus();
+		return false;
+	}
+
+	return true;
+}
+
+function ret_val()
+{
+	var title=document.retn.book.value;
+
+	if(!title.length)
+	{
+		alert('Invalid Request');
+		document.retn.book.focus();
+		return false;
+	}
+
+	return true;
+
+}
+
+
+function changeme(id, action) {
+	if (action=="hide") {
+		document.getElementById(id).style.display = "none";
+	} else {
+		document.getElementById(id).style.display = "block";
+	}
+}
+
+
+function issbook()
+{
+	changeme('text', 'hide');
+	changeme('iss', 'show');
+	changeme('pending','hide');
+	changeme('retn', 'hide');
+	changeme('renw','hide');
+}
+
+function retbook()
+{
+	changeme('text', 'hide');
+	changeme('iss', 'hide');
+	changeme('retn', 'show');
+	changeme('pending','hide');
+	changeme('renw','hide');
+
+}
+
+function renbook()
+{
+	changeme('text', 'hide');
+	changeme('iss', 'hide');
+	changeme('retn', 'hide');
+	changeme('pending','hide');
+	changeme('renw','show');
+}
+
+function penbook()
+{
+	changeme('text', 'hide');
+	changeme('iss', 'hide');
+	changeme('retn', 'hide');
+	changeme('pending','show');
+	changeme('renw','hide');
+
+}
+
+</script>
+
+
+
+<?php
+
+ini_set('display_errors', 1);
+ini_set('log_errors', 1);
+ini_set('error_log', dirname(__FILE__) . '/error_log.txt');
+error_reporting(E_ALL);
+
+session_start();
+if ($_SESSION['user']!='admin')
+{
+	?>
+		<script type="text/javascript">
+		alert("You do not have necessary privileges to see this page\nPlease relogin");
+	window.location = "../login.php";
+		</script>
+		<?php
+
+}
+?>
+
+
+<table width="100%" border="0" cellpadding="0" cellspacing="0" class="container" id="header">
+<td style="color: #FFFFFF" align= "center"><h1>My Library</h1>
+</td>
+
+</tr>
+</table>
+<table width="100%" border="0" cellpadding="0" cellspacing="0" class="container" id="header">
+<tr>
+<td id="logo"> 
+<p>Welcome Admin&nbsp|&nbsp<a href="admin.php">Home&nbsp|&nbsp</a>  <a href="../login.php">Logout</a></p></td>
+<td><table width="100%" border="0" cellpadding="0" cellspacing="0" id="menu">
+<tr>
+<td><a href="members.php">Members</a></td>
+<td><a href="books.php">Books</a></td>
+<td><a href="issue.php">Issue</a></td>
+</tr>
+</table></td>
+</tr>
+</table>
+<table width="100%" border="0" cellpadding="0" cellspacing="0" class="container">
+<tr>
+<td id="page">
+<table  border="0" cellpadding="0" cellspacing="0">
+<tr valign="top">
+<td id="sidebar">
+<table border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td><h2>Working Menu</h2></td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td width="100%"><p><strong><span onclick="issbook();" style="cursor: pointer;">Issue Book</span></strong><br /></p></td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td><p><strong><span onclick="renbook();" style="cursor: pointer;">Renew Book</strong><br /></p></td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td><p><strong><span onclick="retbook();" style="cursor: pointer;">Return Book</strong><br /></p></td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+</tr>
+
+<tr>
+<td width="100%"><p><strong><span onclick="penbook();" style="cursor: pointer;">Pending Return</span></strong><br /></p></td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+</tr>
+
+
+</table></td>
+<td>&nbsp;</td>
+
+<td id="content"><table width="100%" border="0" align="center" cellpadding="0" cellspacing="0">
+<tr>
+<td><h2>LIBRARY MANAGEMENT</h2></td>
+</tr>
+<tr>
+<td>Issue Management</td>
+</tr>
+
+<tr>
+<td class="divider">&nbsp;</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+</tr>
+
+
+</table>
+<table id="text" style="display:block;" width="506" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td>Issue, Renew and Return books 
+
+
+<?php
+
+$dbconn=mysql_connect('localhost','root','tarang1tan2');
+mysql_select_db('db_b090437cs') or die("couldnt select");
+
+$q1="select count(*) from issue";
+$q2="select count(*) from issue";// where ret_date < (select current_date)";
+
+$r1=mysql_query($q1);
+$r2=mysql_query($q2) or die("hey you!");
+
+$tot=mysql_fetch_row($r1);
+$pend=mysql_fetch_row($r2);
+
+echo "<br /><br />Total books issued : " . $tot[0] . "<br />";
+echo "Number of pending returns : " . $pend[0] . "<br />";
+
+mysql_free_result($r1);
+mysql_free_result($r2);
+
+mysql_close($dbconn);						
+?>						
+
+</td>
+</tr>
+</table>
+
+<table id="iss" style="display: none;" width="506" border="0" cellpadding="0" cellspacing="0">
+<form NAME=issue action="<?= $_SERVER['PHP_SELF']; ?>" method="post" onSubmit="return iss_val()">
+<tr>
+<td>
+Title :
+</td>
+<td>
+
+<select name="book">
+<?php
+$dbconn=mysql_connect('localhost','root','tarang1tan2');
+mysql_select_db('db_b090437cs') or die("couldnt select");
+
+$query="select isbn,title from books where avail='y'";
+
+$result=mysql_query($query) or die('Could not execute query ');
+
+$num=mysql_num_rows($result); 
+
+for ($i=0;$i<$num;$i++)
+{
+	$row = mysql_fetch_row($result);
+
+	print("<option value=\"$row[1]\">$row[1]</option>");
+}
+
+mysql_free_result($result);							
+mysql_close($dbconn);
+
+?>
+
+</select>
+
+
+</td>
+</tr>
+<tr><td>&nbsp;</td></tr>
+<tr>
+<td>
+Member ID :
+</td>
+<td>
+<input type="text" name="mem" />
+</td>
+</tr>
+<tr><td>&nbsp;</td></tr>
+
+<tr>
+<td>
+<input type="hidden" name="flag5" value=1 / >
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+<INPUT TYPE=submit NAME=submit VALUE=Submit >
+</td>
+</tr>
+
+
+</FORM>
+</table>
+
+
+
+<table id="pending" style="display: none;" width="506" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<th>&nbsp ISBN&nbsp&nbsp</th><th>&nbsp&nbsp TITLE&nbsp&nbsp</th><th>&nbsp&nbsp MEMBER&nbsp&nbsp</th><th>&nbsp&nbsp No of days</th>
+</tr>
+
+
+
+<?php
+$dbconn=mysql_connect('localhost','root','tarang1tan2');
+mysql_select_db('db_b090437cs') or die("couldnt select");
+
+$query="select isbn,title,name,((select current_date)-ret_date) as no_days from issue natural join books natural join members where ret_date < (select current_date)"; 
+
+$result=mysql_query($query) or die('Could not execute query ');
+
+$num=mysql_num_rows($result); 
+
+for ($i=0;$i<$num;$i++)
+{
+	$row = mysql_fetch_row($result,$i);
+
+	echo "<tr><td>&nbsp ".$row[0]."&nbsp&nbsp</td><td>&nbsp&nbsp ".$row[1]."&nbsp&nbsp</td><td>&nbsp&nbsp ".$row[2]."&nbsp&nbsp</td><td>&nbsp&nbsp ".$row[3]."</td></tr>";
+
+}
+
+mysql_free_result($result);							
+mysql_close($dbconn);
+
+?>
+
+</tr>
+
+<tr><td>&nbsp;</td></tr>
+
+
+</table>
+
+
+<table id="renw" style="display: none;" width="506" border="0" cellpadding="0" cellspacing="0">
+<form name="renew" action="<?= $_SERVER['PHP_SELF']; ?>" method="post" onSubmit="return ren_val()">
+<tr>
+<td>
+Title :
+</td>
+
+<td>
+
+<select name="title">
+<?php
+mysql_connect('localhost','root','tarang1tan2');
+mysql_select_db('db_b090437cs') or die("couldnt select");
+
+$query="select isbn,title from books"; 
+
+$result=mysql_query($dbconn,$query) or die('Could not execute query ');
+
+$num=mysql_num_rows($result); 
+
+for ($i=0;$i<$num;$i++)
+{
+	$row = mysql_fetch_row($result);
+
+	print("<option value=\"$row[0]\">$row[1]</option>");
+}
+
+mysql_free_result($result);							
+mysql_close($dbconn);
+
+?>
+
+</select>
+</td>
+</tr>
+
+<tr><td>&nbsp;</td></tr>
+
+<tr>
+<td>
+<input type="hidden" name="flag7" value=1 />
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+<INPUT TYPE=submit NAME=submit VALUE=Submit />
+</td>
+</tr>
+
+
+</form>
+</table>
+
+
+
+
+
+
+<table id="retn" style="display: none;" width="506" border="0" cellpadding="0" cellspacing="0">
+<form NAME=ret action="<?= $_SERVER['PHP_SELF']; ?>" method="post" onSubmit="return ret_val()">
+<tr>
+<td>
+Title :
+</td>
+
+<td>
+
+<select name="book">
+<?php
+$dbconn=mysql_connect('localhost','root','tarang1tan2');
+mysql_select_db('db_b090437cs') or die("couldnt select");
+
+$query="select isbn,title from issue natural join books"; 
+
+$result=mysql_query($query) or die('Could not execute query ');
+
+$num=mysql_num_rows($result); 
+
+for ($i=0;$i<$num;$i++)
+{
+	$row = mysql_fetch_row($result,$i);
+
+	print("<option value=\"$row[0]\">$row[1]</option>");
+}
+
+mysql_free_result($result);
+mysql_close($dbconn);
+
+?>
+
+</select>
+</td>
+</tr>
+
+<tr><td>&nbsp</td></tr>
+
+i<tr>
+<td>
+<input type="hidden" name="flag6" value=1 />
+</td>
+</tr>
+
+
+<tr>
+<td></td>
+<td>
+
+<INPUT TYPE=submit NAME=submit VALUE=Submit />
+</td>
+</tr>
+
+
+</FORM>
+</table>
+
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+<table width="100%" border="0" cellpadding="0" cellspacing="0" class="container" id="footer">
+<tr>
+<td><p>Copyright &copy; 2013 ! </a></p></td>
+</tr>
+</table>
+
+<?php
+
+
+if(isset($_POST['flag6']))
+{
+	unset($_POST['flag6']);
+
+	$q3="select ret_date from issue where isbn='".$_POST['book']."'";
+
+	$r3=mysql_query($q3) or die('Could not execute query ');
+
+	$row = mysql_fetch_row($r3);
+
+
+	$ret=$row[0];
+	$tod=Date('Y-m-d');
+
+	if($ret<$tod)
+	{
+
+		?>
+			<script type="text/javascript">
+			alert('Pending late fees for days');
+
+		</script>
+			<?
+
+	}
+
+	$q1="delete from issue where isbn='".$_POST['book']."'";
+	$q2="update books set avail='y'where isbn='".$_POST['book']."'";
+
+	$r1=mysql_query($q1);
+	$r2=mysql_query($q2);
+
+	if($r1&&$r2)
+	{
+		?>
+			<script type="text/javascript">
+			alert('Books successfully returned');
+
+		</script>
+			<?
+
+	}
+
+	else
+	{
+		{
+			?>
+				<script type="text/javascript">
+				alert('Error returning the books');
+
+			</script>
+				<?
+
+		}
+
+
+
+	}
+
+
+}
+
+?>
+
+
+
+
+<?php
+
+
+if(isset($_POST['flag5']))
+{
+	echo "Heyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy";
+	unset($_POST['flag5']);
+
+	$dbconn=mysql_connect('localhost','root','tarang1tan2') or die("AKASDJNBASDN");
+	mysql_select_db('db_b090437cs') or die("couldnt select");
+
+	$q1="select id from members";
+
+	$r1=mysql_query($q1);
+
+	$temp=0;
+	$num=mysql_num_rows($r1); 
+
+	for ($i=0;$i<$num;$i++)
+	{
+		$row = mysql_fetch_row($r1);
+		if($row[0]==$_POST['mem'])
+		{
+			$temp=1;
+			break;
+		}
+	}
+	if($temp==0)
+	{
+		?>
+
+			<script type="text/javascript">
+			alert('Invalid Member ID');
+		window.location("issue.php");
+
+		</script>
+
+
+			<?php
+	}
+	else
+	{
+		$due=Date('m-d-Y', strtotime("+14 days"));
+		$q2="update books set avail='n' where title='".$_POST['book']."'"; 	
+		$que="select isbn from books where title='".$_POST['book']."'";
+		$isbn=mysql_query($que);
+		$is=mysql_fetch_row($isbn);
+		$q4="insert into issue values('".$_POST['book']."','".$due."','".$is[0]."','".$_POST['mem']."')";
+
+		$r2=mysql_query($q2) or die("asas");
+		$r4=mysql_query($q4)or die("adsd");
+
+		if($r2&&$r4)
+		{
+			?>
+				<script type="text/javascript">
+				alert('Book successfully issued\nReturn Date is '+"<?php echo $due  ?>");
+			</script>
+				<?
+		}
+		 mysql_free_result($r2);
+		// pg_free_result($r3);
+		mysql_free_result($r4);
+		//mysql_free_result($r5);
+		//mysql_free_result($r6);
+	}    
+
+
+mysql_free_result($r1);
+mysql_close($dbconn);
+}
+
+
+?>
+
+</body>
+</html>
